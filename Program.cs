@@ -6,7 +6,53 @@ class Program
 {
     static void Main(string[] args)
     {
-        Test7();
+        Test9();
+    }
+
+    private static void Test9()
+    {
+        // new task: parse <p></p>
+        var startTag = string.Empty; 
+        var endTag = string.Empty;
+
+        var C = new Cond(char.IsAsciiLetterLower);
+        var tag =  new OneMore<char>(C);
+        var A = new XParser('<');
+        var B = A.Parse("<abc></bda>")
+            .AndThen(_ => tag)
+            .AndThenMap(xs => new string(xs))
+            .AndThen(x =>
+            {
+                Console.WriteLine(x);
+                startTag = x; // save the tag
+                return new XParser('>');
+            })
+            .AndThen(_ => new XParser('<'))
+            .AndThen(_ => new XParser('/'))
+            .AndThen(_ => tag)
+            .AndThenMap(xs => new string(xs))
+            .AndThen(x =>
+            {
+                Console.WriteLine(x);
+                return new XParser('>');
+            })
+            ;
+    }
+
+    private static void Test8()
+    {
+        // new task: parse <p></p>
+        var C = new Cond(char.IsAsciiLetterLower);
+        var tag =  new OneMore<char>(C);
+        var A = new XParser('<');
+        var B = A.Parse("<abc></abc>")
+            .AndThen(_ => tag)
+            .AndThen(_ => new XParser('>'))
+            .AndThen(_ => new XParser('<'))
+            .AndThen(_ => new XParser('/'))
+            .AndThen(_ => tag)
+            .AndThen(_ => new XParser('>'))
+            ;
     }
 
     private static void Test7()
@@ -88,6 +134,18 @@ static class Extensions
         {
             var next = funcNext(result.Value); // call the external function; get the parser
             return next.Parse(result.Rest);
+        }
+
+        return Result<U>.Fail(result.Error);
+    }
+
+    // change the type; convert the result
+    public static IResult<U> AndThenMap<T, U>(this IResult<T> result, Func<T, U> convert)
+    {
+        if (result.HasValue)
+        {
+            var value = convert(result.Value);
+            return Result<U>.Ok(value, result.Rest);
         }
 
         return Result<U>.Fail(result.Error);
