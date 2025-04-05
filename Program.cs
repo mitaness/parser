@@ -13,12 +13,11 @@ class Program
     {
         // new task: parse <p></p>
         var startTag = string.Empty; 
-        var endTag = string.Empty;
 
         var C = new Cond(char.IsAsciiLetterLower);
         var tag =  new OneMore<char>(C);
         var A = new XParser('<');
-        var B = A.Parse("<abc></bda>")
+        var B = A.Parse("<abc></abc>")
             .AndThen(_ => tag)
             .AndThenMap(xs => new string(xs))
             .AndThen(x =>
@@ -31,12 +30,8 @@ class Program
             .AndThen(_ => new XParser('/'))
             .AndThen(_ => tag)
             .AndThenMap(xs => new string(xs))
-            .AndThen(x =>
-            {
-                Console.WriteLine(x);
-                return new XParser('>');
-            })
-            ;
+            .Where(x => x == startTag)
+            .AndThen(x => new XParser('>'));
     }
 
     private static void Test8()
@@ -151,16 +146,32 @@ static class Extensions
         return Result<U>.Fail(result.Error);
     }
 
-#if false
-    public static void AndThen<T, U>(this IResult<T> result, Func<T, IParser<U>> funcNext)
+    public static IResult<T> Where<T>(this IResult<T> result, Func<T, bool> condition)
     {
         if (result.HasValue)
         {
-            var next = funcNext(result.Value); // call the external function with result
-            // actually now I look at it we do not need the T parameter
+            var success = condition(result.Value); // call the external function; check the condition
+
+            if (success)
+            {
+                return result;
+            }
+
+            return Result<T>.Fail("condition failed");
         }
-    } 
-#endif
+
+        return result;
+    }
+
+    public static IResult<T> Do<T>(this IResult<T> result, Action<T> action)
+    {
+        if (result.HasValue)
+        {
+            action(result.Value);
+        }
+
+        return result;
+    }
 }
 
 class OneMore<T> : IParser<T[]>
