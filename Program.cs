@@ -6,7 +6,17 @@ class Program
 {
     static void Main(string[] args)
     {
-        Test3();
+        Test4();
+    }
+
+    private static void Test4()
+    {
+        var A = new Cond(char.IsAsciiLetterLower);
+        var B = new XParser('B');
+        var BB = new ZeroMore<char>(B);
+        var AA = new ZeroMore<char>(A);
+        var C = BB.Parse("BBBxh");
+        var D = AA.Parse("djsfl4dsf");
     }
 
     private static void Test3()
@@ -46,10 +56,15 @@ class ZeroMore<T> : IParser<T[]>
             if (B.HasValue)
             {
                 list.Add(B.Value);
-                //rest = B.;
+                rest = B.Rest;
+            }
+            else
+            {
+                break;
             }
         }
-        throw new NotImplementedException();
+
+        return Result<T[]>.Ok(list.ToArray(), rest);
     }
 
     public ZeroMore(IParser<T> a)
@@ -138,6 +153,7 @@ interface IResult<out T>
 {
     T Value { get; }
     bool HasValue { get; }
+    string Rest { get; }
 }
 
 interface IParser<out T>
