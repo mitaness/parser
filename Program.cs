@@ -6,7 +6,27 @@ class Program
 {
     static void Main(string[] args)
     {
-        Test5();
+        Test7();
+    }
+
+    private static void Test7()
+    {
+        var A = new XParser('A');
+        var B = A.Parse("ABCD_abc")
+            .AndThen(_ => new XParser('B'))
+            .AndThen(_ => new XParser('C'))
+            .AndThen(_ => new XParser('D'))
+            ;
+    }
+
+    private static void Test6()
+    {
+        var A = new XParser('A');
+        var B = A.Parse("ABCD_abc")
+            .AndThen(() => new XParser('B'))
+            .AndThen(() => new XParser('C'))
+            .AndThen(() => new XParser('D'))
+            ;
     }
 
     private static void Test5()
@@ -48,6 +68,42 @@ class Program
 }
 
 // then Extensions
+
+static class Extensions
+{
+    public static IResult<U> AndThen<T, U>(this IResult<T> result, Func<IParser<U>> funcNext)
+    {
+        if (result.HasValue)
+        {
+            var next = funcNext(); // call the external function; get the parser
+            return next.Parse(result.Rest);
+        }
+
+        return Result<U>.Fail(result.Error);
+    }
+
+    public static IResult<U> AndThen<T, U>(this IResult<T> result, Func<T, IParser<U>> funcNext)
+    {
+        if (result.HasValue)
+        {
+            var next = funcNext(result.Value); // call the external function; get the parser
+            return next.Parse(result.Rest);
+        }
+
+        return Result<U>.Fail(result.Error);
+    }
+
+#if false
+    public static void AndThen<T, U>(this IResult<T> result, Func<T, IParser<U>> funcNext)
+    {
+        if (result.HasValue)
+        {
+            var next = funcNext(result.Value); // call the external function with result
+            // actually now I look at it we do not need the T parameter
+        }
+    } 
+#endif
+}
 
 class OneMore<T> : IParser<T[]>
 {
@@ -187,6 +243,7 @@ interface IResult<out T>
     T Value { get; }
     bool HasValue { get; }
     string Rest { get; }
+    string Error { get; }
 }
 
 interface IParser<out T>
