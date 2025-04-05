@@ -10,13 +10,24 @@ internal class Program2
 {
     static void Main(string[] args)
     {
-        Test();
+        Test2();
+    }
+
+    private static void Test2()
+    {
+        var A = new SpaceParser();
+        var B = new WordParser();
+        var C = new TagParser();
+        var D = new Either<IElement>(A, B, C);
+        var E = D.Parse("jkl   <ab></ab>");
     }
 
     private static void Test()
     {
         var A = new SpaceParser();
         var B = A.Parse("   aab");
+        var C = new TagParser();
+        var D = C.Parse("<div></div>4");
     }
 }
 
@@ -34,6 +45,11 @@ class SpaceElement : IElement
 {
     public string Content { get; set; }
     public int Length => Content.Length;
+}
+
+class TagElement : IElement
+{
+    public string TagName { get; set; }
 }
 
 class WordParser : IParser<IElement>
@@ -57,5 +73,58 @@ class SpaceParser : IParser<IElement>
         return space.Parse(input)
             .AndThenMap(xs => new string(xs))
             .AndThenMap(x => new SpaceElement { Content = x });
+    }
+}
+
+class TagParser : IParser<IElement>
+{
+    public IResult<IElement> Parse(string input)
+    {
+        // new task: parse <p></p>
+        var startTag = string.Empty;
+
+        var C = new Cond(char.IsAsciiLetterLower);
+        var tag = new OneMore<char>(C);
+        var A = new XParser('<');
+        return A.Parse(input)
+            .AndThen(_ => tag)
+            .AndThenMap(xs => new string(xs))
+            .AndThen(x =>
+            {
+                startTag = x; // save the tag
+                return new XParser('>');
+            })
+            .AndThen(_ => new XParser('<'))
+            .AndThen(_ => new XParser('/'))
+            .AndThen(_ => tag)
+            .AndThenMap(xs => new string(xs))
+            .Where(x => x == startTag)
+            .AndThen(x => new XParser('>'))
+            .AndThenMap(_ => new TagElement { TagName = startTag });
+    }
+}
+
+class Either<T> : IParser<T>
+{
+    public IParser<T>[] Parsers { get; }
+
+    public IResult<T> Parse(string input)
+    {
+        foreach (var item in Parsers)
+        {
+            var result = item.Parse(input);
+
+            if (result.HasValue)
+            {
+                return result;
+            }
+        }
+
+        return Result<T>.Fail("Either failed");
+    }
+
+    public Either(params IParser<T>[] parsers)
+    {
+        Parsers = parsers;
     }
 }
