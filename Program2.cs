@@ -15,7 +15,8 @@ internal class Program2
 
     private static void Test()
     {
-        throw new NotImplementedException();
+        var A = new SpaceParser();
+        var B = A.Parse("   aab");
     }
 }
 
@@ -33,4 +34,28 @@ class SpaceElement : IElement
 {
     public string Content { get; set; }
     public int Length => Content.Length;
+}
+
+class WordParser : IParser<IElement>
+{
+    public IResult<IElement> Parse(string input)
+    {
+        var C = new Cond(char.IsAsciiLetterLower);
+        var word = new OneMore<char>(C);
+        return word.Parse(input)
+            .AndThenMap(xs => new string(xs))
+            .AndThenMap(x => new WordElement { Content = x });
+    }
+}
+
+class SpaceParser : IParser<IElement>
+{
+    public IResult<IElement> Parse(string input)
+    {
+        var C = new Cond(char.IsWhiteSpace);
+        var space = new OneMore<char>(C);
+        return space.Parse(input)
+            .AndThenMap(xs => new string(xs))
+            .AndThenMap(x => new SpaceElement { Content = x });
+    }
 }
