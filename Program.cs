@@ -6,7 +6,14 @@ class Program
 {
     static void Main(string[] args)
     {
-        Test4();
+        Test5();
+    }
+
+    private static void Test5()
+    {
+        var A = new Cond(char.IsAsciiLetterLower);
+        var AA = new OneMore<char>(A);
+        var B = AA.Parse("1djs5dsf");
     }
 
     private static void Test4()
@@ -37,6 +44,32 @@ class Program
     {
         var A = new XParser('A');
         var B = A.Parse("DAbc");
+    }
+}
+
+// then Extensions
+
+class OneMore<T> : IParser<T[]>
+{
+    public IParser<T> A { get; }
+
+    public IResult<T[]> Parse(string input)
+    {
+        var B = new ZeroMore<T>(A); // or do in the constructor?
+        var result = B.Parse(input);
+        // Assert result.HasValue = true
+
+        if (result.Value.Length > 0)
+        {
+            return result;
+        }
+
+        return Result<T[]>.Fail("OneMore failed");
+    }
+
+    public OneMore(IParser<T> a)
+    {
+        A = a;
     }
 }
 
