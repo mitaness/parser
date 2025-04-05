@@ -10,7 +10,13 @@ internal class Program2
 {
     static void Main(string[] args)
     {
-        Test2();
+        Test3();
+    }
+
+    private static void Test3()
+    {
+        var content = new ContentParser();
+        var A = content.Parse("fjl jdsljf kdfjls<b></b>fkdsjl 5");
     }
 
     private static void Test2()
@@ -28,6 +34,19 @@ internal class Program2
         var B = A.Parse("   aab");
         var C = new TagParser();
         var D = C.Parse("<div></div>4");
+    }
+}
+
+class ContentParser : IParser<IElement[]>
+{
+    public IResult<IElement[]> Parse(string input)
+    {
+        var A = new SpaceParser();
+        var B = new WordParser();
+        var C = new TagParser();
+        var D = new Either<IElement>(A, B, C);
+        var E = new ZeroMore<IElement>(D);
+        return E.Parse(input);
     }
 }
 
