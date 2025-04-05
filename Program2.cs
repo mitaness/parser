@@ -16,7 +16,7 @@ internal class Program2
     private static void Test3()
     {
         var content = new ContentParser();
-        var A = content.Parse("fjl jdsljf kdfjls<b></b>fkdsjl 5");
+        var A = content.Parse("fjl<span>fdsljj djsfkj </span> jdsljf kdfjls<b>dsf</b>fkdsjl 4");
     }
 
     private static void Test2()
@@ -69,6 +69,7 @@ class SpaceElement : IElement
 class TagElement : IElement
 {
     public string TagName { get; set; }
+    public IReadOnlyList<IElement> Content { get; set; }
 }
 
 class WordParser : IParser<IElement>
@@ -101,6 +102,8 @@ class TagParser : IParser<IElement>
     {
         // new task: parse <p></p>
         var startTag = string.Empty;
+        var contentParser = new ContentParser();
+        var content = new List<IElement>();
 
         var C = new Cond(char.IsAsciiLetterLower);
         var tag = new OneMore<char>(C);
@@ -113,13 +116,15 @@ class TagParser : IParser<IElement>
                 startTag = x; // save the tag
                 return new XParser('>');
             })
+            .AndThen(_ => contentParser)
+            .Do(cs => content = cs.ToList()) // save the content
             .AndThen(_ => new XParser('<'))
             .AndThen(_ => new XParser('/'))
             .AndThen(_ => tag)
             .AndThenMap(xs => new string(xs))
             .Where(x => x == startTag)
             .AndThen(x => new XParser('>'))
-            .AndThenMap(_ => new TagElement { TagName = startTag });
+            .AndThenMap(_ => new TagElement { TagName = startTag, Content = content });
     }
 }
 
