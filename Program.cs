@@ -4,10 +4,10 @@ namespace bar;
 
 class Program
 {
-    static void Main(string[] args)
-    {
-        Test9();
-    }
+    //static void Main(string[] args)
+    //{
+    //    Test9();
+    //}
 
     private static void Test9()
     {
