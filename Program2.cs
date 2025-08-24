@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace bar;
+﻿namespace bar;
 
 internal class Program2
 {
@@ -16,7 +10,7 @@ internal class Program2
     private static void Test3()
     {
         var content = new ContentParser();
-        var A = content.Parse("fjl<span>fdsljj djsfkj </span> jdsljf kdfjls<b>dsf</b>fkdsjl 4");
+        var A = content.Parse("fjl<p>fdsljj djsfkj<span>jdsfl</span><b></b>  k   </p> jdsljf kdfjls<b>dsf</b>fkdsjl 4");
     }
 
     private static void Test2()
